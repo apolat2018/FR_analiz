@@ -61,8 +61,10 @@ for j,k in zip(rec_list,hey_list):
 lst=[]
 lst2=[]
 lstmax=[]
+lstmin=[]
 top_pix_field="count","hp"
 fieldTpx=['sumtpx','sumlpx']
+max_min="max","min"
 for l in rec_list:
     outname =str("tablo"+(l)+".dbf")
     outname_table=os.path.join(rec,outname)
@@ -71,6 +73,7 @@ for l in rec_list:
     arcpy.AddField_management(l,"sumtpx","DOUBLE")
     arcpy.AddField_management(l,"sumlpx","DOUBLE")
     arcpy.AddField_management(l,"max","DOUBLE")
+    arcpy.AddField_management(l,"min","DOUBLE")
     arcpy.AddField_management(l,"fr","DOUBLE")
     arcpy.AddField_management(l,"nfr","SHORT")
     arcpy.CalculateField_management(l,"hp","!count_1!","PYTHON")
@@ -100,19 +103,23 @@ for l in rec_list:
         del upcursor2  
     arcpy.CalculateField_management(l,"fr","(!hp!/!sumlpx!)/(!count!/!sumtpx!)","PYTHON")
     maximum = max(row3[0] for row3 in arcpy.da.SearchCursor(l, ['fr']))
+    minumum = min(row3[0] for row3 in arcpy.da.SearchCursor(l, ['fr']))
     with arcpy.da.SearchCursor(l,"fr") as cursor2:
         for row3 in cursor2:
             lstmax.append(row3[0])
+            lstmin.append(row3[0])
             maxfr=max(lstmax)
+            minfr=min(lstmin)
             del row3
         del cursor2  
-    with arcpy.da.UpdateCursor(l,"max") as upcursor3:
+    with arcpy.da.UpdateCursor(l,max_min) as upcursor3:
         for row4 in upcursor3:
             row4[0]=maximum
+            row4[1]=minumum
             upcursor3.updateRow(row4)
             del row4
         del upcursor3  
-    arcpy.CalculateField_management(l,"nfr","(!fr!/!max!*100)","PYTHON")
+    arcpy.CalculateField_management(l,"nfr","((!fr!-!min!)/(!max!-!min!)*100)","PYTHON")
 
     
     
